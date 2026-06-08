@@ -24,12 +24,22 @@ class CampaignSyncService:
                     # Create local copy
                     await self.repo.create(
                         palladium_id=palladium_id,
-                        name=camp.get("name", "Unknown"),
+                        name=camp.get("campaign_name", "Unknown"),
                         target_link=camp.get("target_link", ""),
                         bot_link=camp.get("bot_link", ""),
                         target_mode=2 # Hardcode to Redirect
                     )
                     synced_count += 1
+                else:
+                    # Optional: update existing names/links to keep them fresh
+                    from app.schemas.campaign import CampaignUpdate
+                    update_data = CampaignUpdate(
+                        name=camp.get("campaign_name", existing.name),
+                        target_link=camp.get("target_link", existing.target_link),
+                        bot_link=camp.get("bot_link", existing.bot_link),
+                        target_mode=2
+                    )
+                    await self.repo.update(existing.id, update_data)
             
             return {"status": "success", "synced": synced_count, "total_remote": len(campaigns)}
         except Exception as e:
