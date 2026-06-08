@@ -87,9 +87,8 @@ async def lifespan(app: FastAPI):
     # Auto-create admin user if it doesn't exist
     await ensure_admin_user()
         
-    scheduler_task = None
-    if settings.DEV_MODE:
-        scheduler_task = asyncio.create_task(local_scheduler())
+    # Always run the local scheduler since we don't have a separate Celery worker
+    scheduler_task = asyncio.create_task(local_scheduler())
         
     yield
     
