@@ -36,4 +36,5 @@ settings = Settings()
 if settings.DEV_MODE:
     settings.DATABASE_URL = "sqlite+aiosqlite:///./dev.db"
 elif not settings.DATABASE_URL:
-    settings.DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/palladium"
+    # If in production but no database URL is provided, fallback to production SQLite
+    settings.DATABASE_URL = "sqlite+aiosqlite:///./prod.db"
