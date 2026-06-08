@@ -19,12 +19,16 @@ class CampaignSyncService:
             synced_count = 0
             for camp in campaigns:
                 palladium_id = camp["id"]
+                # The API returns 'name', not 'campaign_name' based on common Palladium setups.
+                # If neither works, we fallback to "Unknown"
+                camp_name = camp.get("name") or camp.get("campaign_name") or "Unknown"
+                
                 existing = await self.repo.get_by_palladium_id(palladium_id)
                 if not existing:
                     # Create local copy
                     await self.repo.create(
                         palladium_id=palladium_id,
-                        name=camp.get("campaign_name", "Unknown"),
+                        name=camp_name,
                         target_link=camp.get("target_link", ""),
                         bot_link=camp.get("bot_link", ""),
                         target_mode=2 # Hardcode to Redirect
@@ -34,7 +38,7 @@ class CampaignSyncService:
                     # Optional: update existing names/links to keep them fresh
                     from app.schemas.campaign import CampaignUpdate
                     update_data = CampaignUpdate(
-                        name=camp.get("campaign_name", existing.name),
+                        name=camp_name,
                         target_link=camp.get("target_link", existing.target_link),
                         bot_link=camp.get("bot_link", existing.bot_link),
                         target_mode=2
