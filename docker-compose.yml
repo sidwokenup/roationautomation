@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DEV_MODE=false
+      - JWT_SECRET_KEY=production-secure-key-change-me
+      - FRONTEND_URL=http://localhost:3000
+      # Use an actual API token here for Palladium integration
+      - PALLADIUM_API_TOKEN=${PALLADIUM_API_TOKEN:-your_default_token}
+    volumes:
+      - ./backend/prod.db:/app/dev.db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    restart: unless-stopped
