@@ -34,8 +34,30 @@ structlog.configure(
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 from contextlib import asynccontextmanager
-from app.db.session import engine, Base
+from app.db.session import engine, Base, AsyncSessionLocal
 import asyncio
+
+async def ensure_admin_user():
+    from app.db.models import User, UserRole
+    from app.core.security import get_password_hash
+    from sqlalchemy.future import select
+    
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(User).where(User.email == "admin@example.com"))
+        user = result.scalars().first()
+        
+        if not user:
+            logger = structlog.get_logger()
+            logger.info("Admin user not found. Creating default admin...")
+            admin_user = User(
+                email="admin@example.com",
+                hashed_password=get_password_hash("Password123!"),
+                role=UserRole.ADMIN,
+                is_active=True
+            )
+            db.add(admin_user)
+            await db.commit()
+            logger.info("Default admin created successfully.")
 
 async def local_scheduler():
     from app.services.rotation_scheduler import RotationSchedulerService
@@ -61,6 +83,9 @@ async def lifespan(app: FastAPI):
     # Auto-create tables for local testing
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        
+    # Auto-create admin user if it doesn't exist
+    await ensure_admin_user()
         
     scheduler_task = None
     if settings.DEV_MODE:
