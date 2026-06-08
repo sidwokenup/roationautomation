@@ -101,7 +101,7 @@ export default function CreateRotationPage() {
             required
             className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900"
             value={formData.interval_minutes === null || Number.isNaN(formData.interval_minutes) ? '' : formData.interval_minutes}
-            onChange={(e) => setFormData({ ...formData, interval_minutes: e.target.value === '' ? null : parseInt(e.target.value, 10) || null })}
+            onChange={(e) => setFormData({ ...formData, interval_minutes: e.target.value === '' ? 15 : parseInt(e.target.value, 10) || 15 })}
           />
         </div>
 
